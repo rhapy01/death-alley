@@ -107,7 +107,18 @@ npm run dev
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 
+Note at the time of commit, some part of the game are still bugging.
+1. Achievement minting
+2. Badge minting
+3. Level Progress meter
+4. Time trial is not yet complete
+5. Survival mode is not yet complete
+
+##
+Im actively working on fixes for those issues.
+
 ## Contact
 
-Your Name - [@yourusername](https://twitter.com/yourusername)
-Project Link: [https://github.com/yourusername/death-alley](https://github.com/yourusername/death-alley) 
+Your Name - [Isaac Akintoye](https://twitter.com/isaacxvoxel)
+Project Link: [https://github.com/rhapy01/death-alley](https://github.com/rhapy01/death-alley) 
