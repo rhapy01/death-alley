@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Texture Generator</title>
+    <link rel="icon" type="image/png" href="textures/logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1>Texture Generator</h1>
+    <div id="output"></div>
+    
+    <script type="module">
+        import asphaltDiffuse from './textures/road/asphalt_diffuse.js';
+        import asphaltNormal from './textures/road/asphalt_normal.js';
+        import asphaltRoughness from './textures/road/asphalt_roughness.js';
+        import grassDiffuse from './textures/grass/grass_diffuse.js';
+        import grassNormal from './textures/grass/grass_normal.js';
+        
+        const output = document.getElementById('output');
+        
+        function createImageDownload(dataUrl, filename) {
+            const div = document.createElement('div');
+            div.style.marginBottom = '20px';
+            
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.style.maxWidth = '300px';
+            img.style.border = '1px solid black';
+            div.appendChild(img);
+            
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename;
+            link.textContent = `Download ${filename}`;
+            link.style.display = 'block';
+            link.style.marginTop = '5px';
+            div.appendChild(link);
+            
+            output.appendChild(div);
+        }
+        
+        // Create downloads for all textures
+        createImageDownload(asphaltDiffuse, 'asphalt_diffuse.jpg');
+        createImageDownload(asphaltNormal, 'asphalt_normal.jpg');
+        createImageDownload(asphaltRoughness, 'asphalt_roughness.jpg');
+        createImageDownload(grassDiffuse, 'grass_diffuse.jpg');
+        createImageDownload(grassNormal, 'grass_normal.jpg');
+    </script>
+</body>
+</html> 

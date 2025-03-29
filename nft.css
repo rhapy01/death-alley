@@ -1,0 +1,246 @@
+.nft-card {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.nft-description {
+    color: #ccc;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.nft-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.nft-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.nft-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.nft-preview {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.nft-preview img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.nft-item:hover .nft-preview img {
+    transform: scale(1.05);
+}
+
+.nft-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nft-status i {
+    font-size: 1.2rem;
+}
+
+.nft-info {
+    text-align: center;
+}
+
+.nft-info h3 {
+    color: #fff;
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.nft-info p {
+    color: #aaa;
+    margin-bottom: 1rem;
+}
+
+.nft-requirements {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.nft-requirements span {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.nft-requirements i {
+    margin-right: 0.5rem;
+    color: #ffd700;
+}
+
+.mint-btn {
+    background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.mint-btn:hover:not(:disabled) {
+    background: linear-gradient(45deg, #ff8e53, #ff6b6b);
+    transform: translateY(-2px);
+}
+
+.mint-btn:disabled {
+    background: #555;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.mint-btn i {
+    margin-right: 0.5rem;
+}
+
+.nft-collection {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nft-collection h3 {
+    color: #fff;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.collection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+/* NFT Rarity Colors */
+.nft-item[data-tier="rookie"] {
+    border: 2px solid #7e8c8d;
+}
+
+.nft-item[data-tier="veteran"] {
+    border: 2px solid #2ecc71;
+}
+
+.nft-item[data-tier="elite"] {
+    border: 2px solid #3498db;
+}
+
+.nft-item[data-tier="master"] {
+    border: 2px solid #9b59b6;
+}
+
+.nft-item[data-tier="legendary"] {
+    border: 2px solid #f1c40f;
+    background: linear-gradient(45deg, rgba(241, 196, 15, 0.1), rgba(230, 126, 34, 0.1));
+}
+
+/* Unlocked NFT Status */
+.nft-item.unlocked .nft-status i {
+    color: #2ecc71;
+}
+
+/* Minted NFT Status */
+.nft-item.minted .nft-status {
+    background: rgba(46, 204, 113, 0.2);
+}
+
+.nft-item.minted .nft-status i {
+    color: #2ecc71;
+}
+
+.level-progress-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    margin: 10px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+    width: 0%;
+    transition: width 1s ease-in-out;
+    border-radius: 10px;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+}
+
+/* Custom progress bar colors for each tier */
+#rookie-progress {
+    background: linear-gradient(90deg, #95a5a6, #7f8c8d);
+}
+
+#veteran-progress {
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+}
+
+#elite-progress {
+    background: linear-gradient(90deg, #3498db, #2980b9);
+}
+
+#master-progress {
+    background: linear-gradient(90deg, #9b59b6, #8e44ad);
+}
+
+#legendary-progress {
+    background: linear-gradient(90deg, #f1c40f, #f39c12);
+}
+
+/* Progress bar animation */
+@keyframes progressFill {
+    from { width: 0%; }
+    to { width: var(--target-width); }
+} 

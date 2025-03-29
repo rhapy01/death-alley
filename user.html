@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>User Profile - Death Alley</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="user.css">
+    <link rel="stylesheet" href="nft.css">
+    <link rel="icon" type="image/png" href="textures/logo.png">
+    <style>
+        /* Tab system */
+        .profile-section {
+            display: none; /* Hidden by default */
+        }
+        
+        .active-section {
+            display: block !important; /* Override display:none for active section */
+        }
+        
+        /* Game mode tabs */
+        .mode-stats {
+            display: none; /* Hidden by default */
+        }
+        
+        #normal-stats {
+            display: block; /* Default game mode stats shown */
+        }
+        
+        /* Fix for tab content visibility */
+        .profile-tabs .profile-tab {
+            cursor: pointer;
+        }
+        
+        /* Ensure proper sizing for containers */
+        .achievements-grid, .badges-grid, .daily-tasks-container, .dcoin-card, .nft-grid {
+            width: 100%;
+            min-height: 200px; /* Ensure there's enough height even if empty */
+        }
+        
+        /* Styling for empty data messages */
+        .no-data-message {
+            background-color: rgba(0, 0, 0, 0.1);
+            border: 1px dashed #666;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
+        
+        /* Ensure NFT sections are visible */
+        #nft-section .nft-grid,
+        #nft-section .nft-collection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        #nft-section .collection-item {
+            width: 100px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        #nft-section .collection-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        
+        /* Styling for NFT minted badges */
+        .minted-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: gold;
+            color: #222;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        
+        .achievement-icon, .badge-icon {
+            position: relative;
+        }
+        
+        .achievement.unlocked .achievement-icon img,
+        .badge.unlocked .badge-icon img {
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        /* Grid layout for achievements and badges */
+        .achievements-grid, .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .achievement, .badge {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            padding: 15px;
+            display: flex;
+            align-items: flex-start;
+            transition: all 0.3s ease;
+            border: 1px solid #333;
+        }
+        
+        .achievement.unlocked, .badge.unlocked {
+            background-color: rgba(76, 175, 80, 0.1);
+            border-color: #4CAF50;
+        }
+        
+        .achievement-icon, .badge-icon {
+            flex: 0 0 60px;
+            margin-right: 15px;
+        }
+        
+        .achievement-icon img, .badge-icon img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 50%;
+            background-color: #222;
+            padding: 5px;
+        }
+        
+        .badge.locked .badge-icon img, 
+        .achievement:not(.unlocked) .achievement-icon img {
+            filter: grayscale(100%) brightness(40%);
+        }
+        
+        .achievement-info, .badge-info {
+            flex: 1;
+        }
+        
+        .achievement-info h3, .badge-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+        
+        .achievement-info p, .badge-info p {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .achievement-progress-bar {
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-bottom: 5px;
+            overflow: hidden;
+        }
+        
+        .achievement-progress-bar .progress {
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+        }
+        
+        .achievement-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .xp-reward {
+            color: #ffeb3b;
+        }
+        
+        .xp-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .xp-bar #xp-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        #xp-progress {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        /* Add to existing styles */
+        .level-up-notification {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            border-color: #4CAF50;
+        }
+        
+        .level-up-notification .notification-title {
+            color: white;
+        }
+
+        .mint-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            width: 100%; /* Make buttons full width */
+        }
+
+        .mint-btn:hover:not([disabled]) {
+            background: linear-gradient(135deg, #45a049, #4CAF50);
+            transform: translateY(-1px);
+        }
+
+        .mint-btn[disabled] {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Style for minted state */
+        .mint-btn[disabled]:has(+ i.fa-check) {
+            background: #45a049;
+            opacity: 0.8;
+        }
+
+        /* Add tooltip style */
+        .mint-btn[title] {
+            position: relative;
+        }
+
+        .mint-btn[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+            margin-bottom: 5px;
+        }
+
+        .mint-btn.minted {
+            background: #45a049 !important;
+            opacity: 0.8;
+            cursor: default;
+        }
+
+        .nft-status.minted {
+            background-color: #45a049;
+            color: white;
+        }
+
+        .mint-btn.minted:hover {
+            transform: none;
+        }
+
+        .blockchain-checkin {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid #2196F3;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .blockchain-checkin h3 {
+            color: #2196F3;
+            margin: 0 0 10px 0;
+        }
+
+        .blockchain-checkin p {
+            color: #888;
+            margin: 0 0 15px 0;
+        }
+
+        #daily-checkin-btn {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        #daily-checkin-btn:hover:not([disabled]) {
+            background: linear-gradient(135deg, #1976D2, #2196F3);
+            transform: translateY(-1px);
+        }
+
+        #daily-checkin-btn[disabled] {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #last-checkin-time {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Add these styles to your existing CSS */
+        .network-container {
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .network-selector {
+            padding: 8px 12px;
+            border: 2px solid #4a5568;
+            border-radius: 6px;
+            background-color: #2d3748;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .network-selector:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .network-selector:not(:disabled):hover {
+            background-color: #4a5568;
+            border-color: #718096;
+        }
+
+        .network-selector option {
+            background-color: #2d3748;
+            color: white;
+        }
+
+        /* Add this style if you don't already have one for screen-reader only content */
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border-width: 0;
+        }
+    </style>
+    <!-- Import blockchain.js as a normal script (not as module) to make it globally available -->
+    <script src="blockchain.js"></script>
+    <!-- Import user.js as module -->
+    <script type="module">
+        // Import user profile from module
+        import { userProfile } from './user.js';
+        
+        // Make userProfile globally available
+        window.userProfile = userProfile;
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Initialize BlockchainManager globally
+                window.blockchainManager = new BlockchainManager();
+                await window.blockchainManager.init();
+
+                // Wait for profile initialization
+                await userProfile.initPromise;
+                
+                if (window.userProfile && window.userProfile.initialized) {
+                    console.log('Profile loaded:', window.userProfile);
+                    updateProfileDisplay();
+                    setupEventListeners();
+                    setupTabSwitching();
+                    
+                    // Force tabs to display properly by cycling through them initially
+                    setTimeout(() => {
+                        // First show achievements to ensure they load properly
+                        document.querySelector('.profile-tab[data-section="achievements"]').click();
+                        
+                        // Then go back to stats tab after a short delay
+                        setTimeout(() => {
+                            document.querySelector('.profile-tab[data-section="stats"]').click();
+                        }, 300);
+                    }, 500);
+                } else {
+                    console.error("Failed to initialize user profile");
+                }
+            } catch (error) {
+                console.error("Error loading profile:", error);
+            }
+        });
+        
+        function updateProfileDisplay() {
+            const profile = window.userProfile;
+            if (!profile) return;
+            
+            console.log('Updating display with profile:', profile);
+            
+            // Update basic info
+            document.getElementById('display-name').textContent = profile.displayName || 'Player';
+            document.getElementById('user-id').textContent = profile.userId || 'ABC-1234';
+            document.getElementById('join-date').textContent = new Date(profile.joinDate || Date.now()).toLocaleDateString();
+            
+            // Update stats - safely check for methods
+            try {
+                // Win rate
+                document.getElementById('win-rate').textContent = 
+                    (typeof profile.getWinRate === 'function' ? profile.getWinRate() : 0) + '%';
+                
+                // K/D ratio
+                document.getElementById('kd-ratio').textContent = 
+                    (typeof profile.getKDRatio === 'function' ? profile.getKDRatio() : 0).toFixed(2);
+                
+                // High score - check if stats exists
+                document.getElementById('high-score').textContent = 
+                    (profile.stats && profile.stats.highScore ? profile.stats.highScore : 0).toLocaleString();
+                
+                // Time played
+                document.getElementById('time-played').textContent = 
+                    typeof profile.getFormattedTimePlayed === 'function' ? profile.getFormattedTimePlayed() : "0h 0m";
+                
+                // Update career stats - safely check if stats exists
+                if (profile.stats) {
+                    document.getElementById('total-battles').textContent = (profile.stats.battles || 0).toLocaleString();
+                    document.getElementById('total-victories').textContent = (profile.stats.victories || 0).toLocaleString();
+                    document.getElementById('total-score').textContent = (profile.stats.totalScore || 0).toLocaleString();
+                    document.getElementById('enemies-defeated').textContent = (profile.stats.enemiesDefeated || 0).toLocaleString();
+                    document.getElementById('total-deaths').textContent = (profile.stats.deaths || 0).toLocaleString();
+                } else {
+                    // Set defaults if stats doesn't exist
+                    document.getElementById('total-battles').textContent = "0";
+                    document.getElementById('total-victories').textContent = "0";
+                    document.getElementById('total-score').textContent = "0";
+                    document.getElementById('enemies-defeated').textContent = "0";
+                    document.getElementById('total-deaths').textContent = "0";
+                }
+            } catch (error) {
+                console.error("Error updating profile stats:", error);
+            }
+            
+            // Update other sections
+            try {
+            // Update game mode stats
+            updateGameModeStats(profile.gameModes);
+            
+            // Update daily tasks
+            updateDailyTasks(profile.dailyTasks);
+            
+            // Update achievements
+            updateAchievements(profile.achievements);
+            
+            // Update badges
+            updateBadges(profile.badges);
+            
+            // Update DCoin
+            updateDCoin(profile.dCoin);
+            
+            // Update NFTs
+            updateNFTs(profile.nfts);
+            } catch (error) {
+                console.error("Error updating profile sections:", error);
+            }
+            
+            // Update wallet status
+            try {
+                const walletAddress = typeof profile.getConnectedWallet === 'function' ? profile.getConnectedWallet() : null;
+            const walletStatus = document.getElementById('wallet-status');
+            if (walletAddress) {
+                walletStatus.textContent = `Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(38)}`;
+                walletStatus.style.color = '#4CAF50';
+            } else {
+                walletStatus.textContent = 'Not Connected';
+                walletStatus.style.color = '#f44336';
+                }
+            } catch (error) {
+                console.error("Error updating wallet status:", error);
+            }
+            
+            // Update XP and level display
+            if (profile.xp) {
+                document.getElementById('player-level').textContent = profile.xp.level;
+                document.getElementById('current-xp').textContent = profile.xp.current;
+                document.getElementById('next-level-xp').textContent = profile.xp.nextLevelAt;
+                
+                // Update XP bar
+                const xpPercentage = (profile.xp.current / profile.xp.nextLevelAt) * 100;
+                document.getElementById('xp-fill').style.width = `${xpPercentage}%`;
+
+                // Update NFT progress bars
+                updateNFTProgressBars(profile.xp.level);
+            }
+        }
+        
+        function updateGameModeStats(gameModes) {
+            if (!gameModes) return;
+            
+            try {
+            // Normal mode
+                if (gameModes.normal) {
+                    document.getElementById('normal-levels').textContent = gameModes.normal.levelsCompleted || 0;
+                    document.getElementById('normal-best-score').textContent = (gameModes.normal.bestScore || 0).toLocaleString();
+                    document.getElementById('normal-kills').textContent = (gameModes.normal.totalKills || 0).toLocaleString();
+                } else {
+                    document.getElementById('normal-levels').textContent = '0';
+                    document.getElementById('normal-best-score').textContent = '0';
+                    document.getElementById('normal-kills').textContent = '0';
+                }
+            
+            // Time trial mode
+                if (gameModes.timeTrial) {
+            for (let i = 1; i <= 3; i++) {
+                        const time = gameModes.timeTrial.bestTimes && gameModes.timeTrial.bestTimes[i - 1];
+                        const formattedTime = typeof window.userProfile.formatTimeTrialTime === 'function' && time ? 
+                            window.userProfile.formatTimeTrialTime(time) : '--:--:--';
+                        document.getElementById(`time-l${i}`).textContent = formattedTime;
+                    }
+                    document.getElementById('time-checkpoints').textContent = (gameModes.timeTrial.checkpointsHit || 0).toLocaleString();
+                    document.getElementById('time-attempts').textContent = (gameModes.timeTrial.attempts || 0).toLocaleString();
+                    document.getElementById('time-completions').textContent = (gameModes.timeTrial.completions || 0).toLocaleString();
+                } else {
+                    for (let i = 1; i <= 3; i++) {
+                        document.getElementById(`time-l${i}`).textContent = '--:--:--';
+                    }
+                    document.getElementById('time-checkpoints').textContent = '0';
+                    document.getElementById('time-attempts').textContent = '0';
+                    document.getElementById('time-completions').textContent = '0';
+                }
+            
+            // Survival mode
+                if (gameModes.survival) {
+                    document.getElementById('survival-cleared').textContent = (gameModes.survival.obstaclesCleared || 0).toLocaleString();
+                    document.getElementById('survival-longest').textContent = (gameModes.survival.longestRun || 0) + 'm';
+                    document.getElementById('survival-ramps').textContent = (gameModes.survival.boostRampsUsed || 0).toLocaleString();
+                } else {
+                    document.getElementById('survival-cleared').textContent = '0';
+                    document.getElementById('survival-longest').textContent = '0m';
+                    document.getElementById('survival-ramps').textContent = '0';
+                }
+            } catch (error) {
+                console.error("Error updating game mode stats:", error);
+            }
+        }
+        
+        function updateDailyTasks(dailyTasks) {
+            const container = document.getElementById('daily-tasks-container');
+            if (!container) {
+                console.error("Daily tasks container not found!");
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            // Check if dailyTasks exists and has tasks property
+            if (!dailyTasks || !dailyTasks.tasks) {
+                console.warn("No daily tasks found:", dailyTasks);
+                container.innerHTML = '<div class="no-data-message">No daily tasks available. Please restart the game.</div>';
+                return;
+            }
+            
+            console.log("Daily tasks data:", dailyTasks);
+            
+            // Convert tasks to array if it's an object
+            const tasksArray = Array.isArray(dailyTasks.tasks) 
+                ? dailyTasks.tasks 
+                : Object.entries(dailyTasks.tasks).map(([id, task]) => ({...task, id}));
+            
+            if (tasksArray.length === 0) {
+                console.warn("Empty tasks array");
+                container.innerHTML = '<div class="no-data-message">No daily tasks available today. Check back tomorrow!</div>';
+                return;
+            }
+            
+            tasksArray.forEach(task => {
+                const taskId = task.id;
+                const taskElement = document.createElement('div');
+                taskElement.className = 'daily-task';
+                
+                // Safely access properties
+                const taskTitle = task.title || formatTaskName(taskId || 'unknown_task');
+                const taskReward = task.reward || 0;
+                const taskCurrent = task.progress || task.current || 0;
+                const taskTarget = task.total || task.target || 1;
+                const taskCompleted = task.completed || false;
+                
+                // Calculate progress percentage safely
+                const progressPercentage = taskTarget > 0 ? (taskCurrent / taskTarget) * 100 : 0;
+                
+                taskElement.innerHTML = `
+                    <div class="task-header">
+                        <span class="task-name">${taskTitle}</span>
+                        <span class="task-reward">${taskReward} DCoins</span>
+                    </div>
+                    <div class="task-progress-bar">
+                        <div class="progress" style="width: ${progressPercentage}%"></div>
+                    </div>
+                    <div class="task-stats">
+                        <span>${taskCurrent}/${taskTarget}</span>
+                        ${taskCompleted ? '<span class="completed">✓ Completed</span>' : ''}
+                    </div>
+                `;
+                container.appendChild(taskElement);
+            });
+            
+            // Update daily tasks count
+            const completedTasks = tasksArray.filter(task => task.completed).length;
+            document.getElementById('daily-tasks-count').textContent = `${completedTasks}/${tasksArray.length}`;
+        }
+        
+        function formatTaskName(taskId) {
+            if (!taskId || typeof taskId !== 'string') return 'Unknown Task';
+            
+            return taskId.split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+        
+        function updateAchievements(achievements) {
+            const container = document.getElementById('achievements-container');
+            if (!container) {
+                console.error("Achievements container not found");
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            if (!achievements || achievements.length === 0) {
+                container.innerHTML = '<div class="no-data-message">No achievements available yet. Keep playing to unlock achievements!</div>';
+                return;
+            }
+            
+            achievements.forEach(achievement => {
+                const achievementElement = document.createElement('div');
+                achievementElement.className = `achievement ${achievement.unlocked ? 'unlocked' : ''}`;
+                
+                // Use default values if properties are missing
+                const title = achievement.title || achievement.name || 'Unknown Achievement';
+                const description = achievement.description || 'Description not available';
+                const icon = achievement.icon || 'textures/achievements/default.png';
+                const progress = achievement.progress || 0;
+                const total = achievement.total || 1;
+                const xpReward = achievement.xpReward || 0;
+                const isMinted = achievement.minted || false;
+                
+                achievementElement.innerHTML = `
+                    <div class="achievement-icon">
+                        <img src="${icon}" alt="${title}">
+                        ${isMinted ? '<div class="minted-badge"><i class="fas fa-certificate"></i></div>' : ''}
+                    </div>
+                    <div class="achievement-info">
+                        <h3>${title}</h3>
+                        <p>${description}</p>
+                        <div class="achievement-progress-bar">
+                            <div class="progress" style="width: ${(progress / total) * 100}%"></div>
+                        </div>
+                        <div class="achievement-stats">
+                            <span>${progress}/${total}</span>
+                            <span class="xp-reward">+${xpReward} XP</span>
+                        </div>
+                        <button class="mint-btn mint-achievement-btn" 
+                                data-achievement-id="${achievement.id}"
+                                ${achievement.unlocked && !achievement.minted ? '' : 'disabled'}
+                                title="${!achievement.unlocked ? 'Complete achievement to mint' : 
+                                       achievement.minted ? 'Already minted' : 'Click to mint'}">
+                            <i class="fas fa-medal"></i> 
+                            ${achievement.minted ? 'Minted' : 'Mint Achievement'}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(achievementElement);
+            });
+            
+            // Update achievements count
+            const unlockedAchievements = achievements.filter(a => a.unlocked).length;
+            document.getElementById('achievements-count').textContent = `${unlockedAchievements}/${achievements.length}`;
+        }
+        
+        function updateBadges(badges) {
+            const container = document.getElementById('badges-container');
+            if (!container) {
+                console.error("Badges container not found");
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            if (!badges || badges.length === 0) {
+                container.innerHTML = '<div class="no-data-message">No badges available yet. Complete achievements to earn badges!</div>';
+                return;
+            }
+            
+            badges.forEach(badge => {
+                const badgeElement = document.createElement('div');
+                badgeElement.className = `badge ${badge.unlocked ? 'unlocked' : 'locked'}`;
+                
+                // Use default values if properties are missing
+                const name = badge.name || badge.title || 'Unknown Badge';
+                const description = badge.description || 'Description not available';
+                const icon = badge.icon || 'textures/badges/default.png';
+                const isMinted = badge.minted || false;
+                
+                badgeElement.innerHTML = `
+                    <div class="badge-icon">
+                        <img src="${icon}" alt="${name}">
+                        ${isMinted ? '<div class="minted-badge"><i class="fas fa-certificate"></i></div>' : ''}
+                    </div>
+                    <div class="badge-info">
+                        <h3>${name}</h3>
+                        <p>${description}</p>
+                        <button class="mint-btn mint-badge-btn" 
+                                data-badge-id="${badge.id}"
+                                disabled="${!badge.unlocked || badge.minted}"
+                                title="${!badge.unlocked ? 'Unlock badge to mint' : 
+                                       badge.minted ? 'Already minted' : 'Click to mint'}">
+                            <i class="fas fa-certificate"></i> 
+                            ${badge.minted ? 'Minted' : 'Mint Badge'}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(badgeElement);
+            });
+            
+            // Update badges count
+            const unlockedBadges = badges.filter(b => b.unlocked).length;
+            document.getElementById('badges-count').textContent = `${unlockedBadges}/${badges.length}`;
+        }
+        
+        function updateDCoin(dCoin) {
+            if (!dCoin) {
+                console.warn("No DCoin data available");
+                
+                // Set defaults for DCoin display
+                document.getElementById('dcoin-balance').textContent = "0";
+                document.getElementById('dcoin-total').textContent = "0";
+                document.getElementById('dcoin-current').textContent = "0";
+                document.getElementById('dcoin-earned').textContent = "0";
+                document.getElementById('dcoin-updated').textContent = "Never";
+                
+                // Show empty message in transaction history
+                const historyContainer = document.getElementById('dcoin-history');
+                if (historyContainer) {
+                    historyContainer.innerHTML = '<div class="no-data-message">No DCoin transactions found. Earn DCoin by completing tasks!</div>';
+                }
+                
+                return;
+            }
+            
+            document.getElementById('dcoin-balance').textContent = (dCoin.balance || 0).toLocaleString();
+            document.getElementById('dcoin-total').textContent = (dCoin.totalEarned || 0).toLocaleString();
+            document.getElementById('dcoin-current').textContent = (dCoin.balance || 0).toLocaleString();
+            document.getElementById('dcoin-earned').textContent = (dCoin.totalEarned || 0).toLocaleString();
+            document.getElementById('dcoin-updated').textContent = dCoin.lastUpdated ? new Date(dCoin.lastUpdated).toLocaleString() : "Never";
+            
+            // Update transaction history
+            const historyContainer = document.getElementById('dcoin-history');
+            if (historyContainer) {
+                if (!dCoin.transactions || dCoin.transactions.length === 0) {
+                    historyContainer.innerHTML = '<div class="no-data-message">No transactions yet. Complete tasks to earn DCoin!</div>';
+                } else {
+                historyContainer.innerHTML = '';
+                dCoin.transactions.slice(0, 10).forEach(tx => {
+                    const txElement = document.createElement('div');
+                        txElement.className = `transaction ${tx.type || 'credit'}`;
+                        
+                        // Use default values if properties are missing
+                        const amount = tx.amount || 0;
+                        const description = tx.description || 'Transaction';
+                        const timestamp = tx.timestamp ? new Date(tx.timestamp).toLocaleDateString() : 'Unknown date';
+                        
+                    txElement.innerHTML = `
+                            <span class="tx-amount">${tx.type === 'credit' ? '+' : '-'}${amount}</span>
+                            <span class="tx-description">${description}</span>
+                            <span class="tx-date">${timestamp}</span>
+                    `;
+                    historyContainer.appendChild(txElement);
+                });
+                }
+            }
+        }
+        
+        async function updateNFTs(nfts) {
+            if (!nfts) {
+                console.warn("No NFT data available");
+                return;
+            }
+            
+            console.log("Updating NFTs with data:", nfts);
+            
+            try {
+                // Get blockchain minting status for each NFT tier
+                const blockchainManager = new BlockchainManager();
+                await blockchainManager.init();
+                const mintedTiers = await blockchainManager.getMintedTiers(); // Wait for the Promise to resolve
+                
+                // Update NFT grid items
+                const nftTiers = ['rookie', 'veteran', 'elite', 'master', 'legendary'];
+                const levelRequirements = {
+                    'rookie': 10,
+                    'veteran': 20,
+                    'elite': 30,
+                    'master': 40,
+                    'legendary': 50
+                };
+                
+                nftTiers.forEach(tier => {
+                    const isMinted = mintedTiers.includes(tier);
+                    const nftElement = document.querySelector(`.nft-item[data-tier="${tier}"]`);
+                    if (!nftElement) {
+                        console.warn(`NFT element not found for tier: ${tier}`);
+                        return;
+                    }
+                    
+                    const mintButton = nftElement.querySelector('.mint-btn');
+                    const statusIcon = document.querySelector(`#${tier}-status`);
+                    
+                    if (!mintButton || !statusIcon) {
+                        console.warn(`Button or status icon not found for tier: ${tier}`);
+                        return;
+                    }
+                    
+                    if (isMinted) {
+                        // NFT is minted - show minted state
+                        mintButton.disabled = true;
+                        mintButton.innerHTML = '<i class="fas fa-check-circle"></i> Minted';
+                        mintButton.classList.add('minted');
+                        mintButton.title = 'Already minted to your wallet';
+                        statusIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                        statusIcon.classList.add('minted');
+                } else {
+                        // NFT is not minted - check level requirements
+                        const requiredLevel = levelRequirements[tier];
+                        const currentLevel = window.userProfile.xp.level;
+                        const canMint = currentLevel >= requiredLevel;
+                        
+                        mintButton.disabled = !canMint;
+                        mintButton.innerHTML = '<i class="fas fa-fire"></i> Mint NFT';
+                        mintButton.classList.remove('minted');
+                        mintButton.title = canMint ? 'Click to mint NFT' : `Reach level ${requiredLevel} to mint`;
+                        statusIcon.innerHTML = canMint ? '<i class="fas fa-unlock"></i>' : '<i class="fas fa-lock"></i>';
+                        statusIcon.classList.remove('minted');
+                    }
+                });
+            } catch (error) {
+                console.error("Error updating NFT status:", error);
+            }
+        }
+        
+        function setupEventListeners() {
+            // Connect wallet button
+            document.getElementById('connect-wallet-btn')?.addEventListener('click', async () => {
+                try {
+                    const success = await window.blockchainManager.connectWallet();
+                    if (success) {
+                        updateProfileDisplay();
+                    }
+                } catch (error) {
+                    console.error('Failed to connect wallet:', error);
+                }
+            });
+            
+            // NFT minting buttons
+            const nftGrid = document.querySelector('.nft-grid');
+            if (nftGrid) {
+                nftGrid.addEventListener('click', async (e) => {
+                    const mintButton = e.target.closest('.mint-btn');
+                    if (!mintButton || mintButton.disabled || mintButton.classList.contains('minted')) {
+                        return;
+                    }
+
+                    const nftItem = mintButton.closest('.nft-item');
+                    if (!nftItem) return;
+
+                    const tier = nftItem.dataset.tier;
+                    if (!tier) return;
+
+                    try {
+                        console.log('Attempting to mint NFT:', tier); // Debug log
+
+                        // Check if wallet is connected
+                        if (!window.blockchainManager.isConnected) {
+                            alert('Please connect your wallet first');
+                            return;
+                        }
+
+                        // Check if already minted
+                        const alreadyMinted = await window.blockchainManager.checkNFTMinted(tier);
+                        if (alreadyMinted) {
+                            mintButton.disabled = true;
+                            mintButton.innerHTML = '<i class="fas fa-check-circle"></i> Minted';
+                            mintButton.classList.add('minted');
+                            alert('This NFT has already been minted to your wallet!');
+                            return;
+                        }
+
+                        // Check DCoin balance
+                        const costs = {
+                            'rookie': 20000,
+                            'veteran': 40000,
+                            'elite': 60000,
+                            'master': 80000,
+                            'legendary': 100000
+                        };
+
+                        const cost = costs[tier];
+                        if (window.userProfile.dCoin.balance < cost) {
+                            alert(`Insufficient DCoin balance. You need ${cost} DCoins to mint this NFT.`);
+                            return;
+                        }
+
+                        // Start minting process
+                        mintButton.disabled = true;
+                        mintButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Minting...';
+
+                        console.log('Starting mint process...'); // Debug log
+                        const success = await window.blockchainManager.mintNFT(tier);
+                        console.log('Mint result:', success); // Debug log
+
+                        if (success) {
+                            // Update button state
+                            mintButton.innerHTML = '<i class="fas fa-check-circle"></i> Minted';
+                            mintButton.classList.add('minted');
+
+                            // Update status icon
+                            const statusIcon = nftItem.querySelector('.nft-status');
+                            if (statusIcon) {
+                                statusIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                                statusIcon.classList.add('minted');
+                            }
+
+                            // Deduct DCoin cost
+                            await window.userProfile.updateDCoinBalance(-cost);
+                            await updateDCoinDisplay(window.userProfile.dCoin.balance);
+
+                            alert('NFT minted successfully!');
+                        } else {
+                            mintButton.disabled = false;
+                            mintButton.innerHTML = '<i class="fas fa-fire"></i> Mint NFT';
+                            alert('Failed to mint NFT. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Minting error:', error);
+                        mintButton.disabled = false;
+                        mintButton.innerHTML = '<i class="fas fa-fire"></i> Mint NFT';
+                        alert(error.message || 'Failed to mint NFT. Please try again.');
+                    }
+                });
+            }
+            
+            // Game mode tabs
+            document.querySelectorAll('.mode-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all mode tabs
+                    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    // Hide all mode stats sections
+                    document.querySelectorAll('.mode-stats').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    // Show selected mode stats section
+                    const mode = tab.dataset.mode;
+                    document.getElementById(`${mode}-stats`).style.display = 'block';
+                });
+            });
+            
+            // DCoin actions
+            document.getElementById('sync-dcoin')?.addEventListener('click', async () => {
+                try {
+                    await window.userProfile.syncDCoinBalance();
+                    updateProfileDisplay();
+                } catch (error) {
+                    console.error('Failed to sync DCoin balance:', error);
+                }
+            });
+            
+            document.getElementById('withdraw-dcoin')?.addEventListener('click', async () => {
+                try {
+                    const amount = prompt('Enter amount to withdraw:');
+                    if (amount && !isNaN(amount)) {
+                        await window.userProfile.withdrawDCoins(Number(amount));
+                        updateProfileDisplay();
+                    }
+                } catch (error) {
+                    console.error('Failed to withdraw DCoins:', error);
+                }
+            });
+        }
+        
+        function setupTabSwitching() {
+            // Profile section tabs
+            document.querySelectorAll('.profile-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const sectionId = tab.dataset.section;
+                    
+                    // Update active tab
+                    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Update active section
+                    document.querySelectorAll('.profile-section').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    
+                    const targetSection = document.getElementById(`${sectionId}-section`);
+                    if (targetSection) {
+                        targetSection.style.display = 'block';
+                        
+                        // Trigger content-specific updates
+                        if (sectionId === 'achievements') {
+                            updateAchievementsDisplay();
+                        } else if (sectionId === 'nft') {
+                            updateNFTDisplay();
+                        } else if (sectionId === 'daily') {
+                            updateDailyTasksDisplay();
+                        }
+                    }
+                });
+            });
+
+            // Game mode tabs
+            document.querySelectorAll('.mode-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all mode tabs
+                    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    // Hide all mode stats sections
+                    document.querySelectorAll('.mode-stats').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    // Show selected mode stats section
+                    const mode = tab.dataset.mode;
+                    const statsSection = document.getElementById(`${mode}-stats`);
+                    if (statsSection) {
+                        statsSection.style.display = 'block';
+                    }
+                });
+            });
+
+            // Set first tabs as active by default
+            const firstProfileTab = document.querySelector('.profile-tab');
+            const firstModeTab = document.querySelector('.mode-tab');
+            if (firstProfileTab) firstProfileTab.click();
+            if (firstModeTab) firstModeTab.click();
+        }
+
+        function updateAchievementsDisplay() {
+            if (!window.blockchainManager || !window.blockchainManager.isConnected) {
+                return;
+            }
+
+            const achievementButtons = document.querySelectorAll('.mint-achievement-btn');
+            achievementButtons.forEach(async (button) => {
+                const achievementId = button.getAttribute('data-achievement-id');
+                if (!achievementId) return;
+
+                try {
+                    // Check if achievement is already minted
+                    const isMinted = await window.blockchainManager.checkAchievementMinted(achievementId);
+                    if (isMinted) {
+                        button.disabled = true;
+                        button.innerHTML = '<i class="fas fa-check"></i> Minted';
+                        
+                        // Add minted badge if not present
+                        const achievementElement = button.closest('.achievement');
+                        if (achievementElement) {
+                            const iconContainer = achievementElement.querySelector('.achievement-icon');
+                            if (iconContainer && !iconContainer.querySelector('.minted-badge')) {
+                                const mintedBadge = document.createElement('div');
+                                mintedBadge.className = 'minted-badge';
+                                mintedBadge.innerHTML = '<i class="fas fa-certificate"></i>';
+                                iconContainer.appendChild(mintedBadge);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking achievement status:', error);
+                }
+            });
+        }
+
+        function updateNFTDisplay() {
+            if (!window.blockchainManager || !window.blockchainManager.isConnected) {
+                return;
+            }
+
+            const nftButtons = document.querySelectorAll('.mint-nft-btn');
+            nftButtons.forEach(async (button) => {
+                const tier = button.getAttribute('data-tier');
+                if (!tier) return;
+
+                try {
+                    // Check if NFT is already minted
+                    const isMinted = await window.blockchainManager.checkNFTMinted(tier);
+                    if (isMinted) {
+                        button.disabled = true;
+                        button.innerHTML = '<i class="fas fa-check"></i> Minted';
+                        
+                        // Add minted badge if not present
+                        const nftElement = button.closest('.nft-card');
+                        if (nftElement) {
+                            const iconContainer = nftElement.querySelector('.nft-icon');
+                            if (iconContainer && !iconContainer.querySelector('.minted-badge')) {
+                                const mintedBadge = document.createElement('div');
+                                mintedBadge.className = 'minted-badge';
+                                mintedBadge.innerHTML = '<i class="fas fa-certificate"></i>';
+                                iconContainer.appendChild(mintedBadge);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking NFT status:', error);
+                }
+            });
+        }
+
+        function updateDailyTasksDisplay() {
+            if (!window.blockchainManager || !window.blockchainManager.isConnected) {
+                return;
+            }
+
+            const checkInButton = document.querySelector('#daily-check-in-btn');
+            if (!checkInButton) return;
+
+            // Check last check-in time
+            window.blockchainManager.getLastCheckIn().then(lastCheckIn => {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                if (lastCheckIn && lastCheckIn >= today) {
+                    // Already checked in today
+                    checkInButton.disabled = true;
+                    checkInButton.innerHTML = '<i class="fas fa-check"></i> Already Checked In';
+                } else {
+                    // Can check in
+                    checkInButton.disabled = false;
+                    checkInButton.innerHTML = '<i class="fas fa-calendar-check"></i> Daily Check-in';
+                }
+            }).catch(error => {
+                console.error('Error checking last check-in:', error);
+            });
+        }
+
+        // ... rest of the existing code (setupEventListeners, showNotification, initializePage) ...
+    </script>
+</head>
+<body class="profile-page">
+    <header class="profile-header">
+        <div class="header-container">
+            <a href="index.html" class="back-button"><i class="fas fa-arrow-left"></i> Back to Game</a>
+            <h1>DEATH ALLEY</h1>
+            <div class="header-actions">
+                <button id="edit-profile-btn" class="header-button">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </button>
+                <button id="connect-wallet-btn" class="header-button">
+                    <i class="fas fa-wallet"></i> Connect Wallet
+                </button>
+                <span id="wallet-status"></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="profile-banner">
+        <div class="profile-container">
+            <div class="profile-hero">
+                <div class="user-avatar">
+                    <img id="user-avatar" src="textures/default-avatar.png" alt="User Avatar">
+                    <button id="change-avatar-btn" aria-label="Change Avatar"><i class="fas fa-camera"></i></button>
+                </div>
+                <div class="user-info">
+                    <h2 id="display-name">Player</h2>
+                    <div class="user-details">
+                        <span class="user-tag"><i class="fas fa-id-badge"></i> ID: <span id="user-id">ABC-1234</span></span>
+                        <span class="user-tag"><i class="fas fa-calendar-alt"></i> Joined: <span id="join-date">01/01/2023</span></span>
+                        <span class="user-tag rank-tag">
+                            <img id="rank-icon" src="textures/ranks/rookie.png" alt="Rank">
+                            <span id="rank-name">Rookie</span>
+                        </span>
+                        <span class="user-tag dcoin-tag">
+                            <i class="fas fa-coins"></i> DCoin: <span id="dcoin-balance">0</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="rank-progress">
+                    <div class="progress-bar">
+                        <div id="rank-progress-fill"></div>
+                    </div>
+                    <div id="rank-progress-text">0/100 XP to next rank</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="profile-container">
+            <div class="profile-tabs">
+                <button class="profile-tab active" data-section="stats">Stats</button>
+                <button class="profile-tab" data-section="daily">Daily Tasks</button>
+                <button class="profile-tab" data-section="achievements">Achievements</button>
+                <button class="profile-tab" data-section="badges">Badges</button>
+                <button class="profile-tab" data-section="dcoin">DCoin</button>
+                <button class="profile-tab" data-section="nft">NFTs</button>
+            </div>
+
+            <section id="stats-section" class="profile-section active-section">
+                <div class="highlights-cards">
+                    <div class="highlight-card">
+                        <div class="highlight-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="highlight-info">
+                            <h3>Win Rate</h3>
+                            <div class="highlight-value" id="win-rate">0%</div>
+                        </div>
+                    </div>
+                    <div class="highlight-card">
+                        <div class="highlight-icon">
+                            <i class="fas fa-crosshairs"></i>
+                        </div>
+                        <div class="highlight-info">
+                            <h3>K/D Ratio</h3>
+                            <div class="highlight-value" id="kd-ratio">0</div>
+                        </div>
+                    </div>
+                    <div class="highlight-card">
+                        <div class="highlight-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="highlight-info">
+                            <h3>High Score</h3>
+                            <div class="highlight-value" id="high-score">0</div>
+                        </div>
+                    </div>
+                    <div class="highlight-card">
+                        <div class="highlight-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="highlight-info">
+                            <h3>Time Played</h3>
+                            <div class="highlight-value" id="time-played">0h 0m</div>
+                        </div>
+                    </div>
+                    <div class="highlight-card">
+                        <div class="highlight-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="highlight-info">
+                            <h3>Level</h3>
+                            <div class="highlight-value" id="player-level">1</div>
+                        </div>
+                    </div>
+                    <div class="highlight-card">
+                        <div class="highlight-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="highlight-info">
+                            <h3>XP Progress</h3>
+                            <div class="highlight-value">
+                                <div id="xp-progress">
+                                    <span id="current-xp">0</span>/<span id="next-level-xp">100</span>
+                                </div>
+                                <div class="xp-bar">
+                                    <div id="xp-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h2>Career Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Total Battles</h3>
+                            <div class="stat-value" id="total-battles">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Victories</h3>
+                            <div class="stat-value" id="total-victories">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Score</h3>
+                            <div class="stat-value" id="total-score">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Enemies Defeated</h3>
+                            <div class="stat-value" id="enemies-defeated">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Deaths</h3>
+                            <div class="stat-value" id="total-deaths">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-modes-card">
+                    <h2>Game Modes</h2>
+                    <div class="mode-tabs">
+                        <button class="mode-tab active" data-mode="normal">Normal</button>
+                        <button class="mode-tab" data-mode="time">Time Trial</button>
+                        <button class="mode-tab" data-mode="survival">Survival</button>
+                    </div>
+
+                    <div id="normal-stats" class="mode-stats">
+                        <div class="mode-stats-grid">
+                            <div class="stat-card">
+                                <h3>Levels Completed</h3>
+                                <div class="stat-value" id="normal-levels">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Best Score</h3>
+                                <div class="stat-value" id="normal-best-score">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Total Kills</h3>
+                                <div class="stat-value" id="normal-kills">0</div>
+                            </div>
+                        </div>
+
+                        <div class="level-progress">
+                            <h3>Level Progress</h3>
+                            <div class="level-bar-container">
+                                <div class="level-label">Level 1</div>
+                                <div class="level-bar">
+                                    <div class="level-complete" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="level-bar-container">
+                                <div class="level-label">Level 2</div>
+                                <div class="level-bar">
+                                    <div class="level-complete" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="level-bar-container">
+                                <div class="level-label">Level 3</div>
+                                <div class="level-bar">
+                                    <div class="level-complete" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="time-stats" class="mode-stats" style="display: none;">
+                        <div class="mode-stats-grid">
+                            <div class="stat-card">
+                                <h3>Best Time L1</h3>
+                                <div class="stat-value" id="time-l1">--:--:--</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Best Time L2</h3>
+                                <div class="stat-value" id="time-l2">--:--:--</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Best Time L3</h3>
+                                <div class="stat-value" id="time-l3">--:--:--</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Checkpoints</h3>
+                                <div class="stat-value" id="time-checkpoints">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Attempts</h3>
+                                <div class="stat-value" id="time-attempts">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Completions</h3>
+                                <div class="stat-value" id="time-completions">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="survival-stats" class="mode-stats" style="display: none;">
+                        <div class="mode-stats-grid">
+                            <div class="stat-card">
+                                <h3>Obstacles Cleared</h3>
+                                <div class="stat-value" id="survival-cleared">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Longest Run</h3>
+                                <div class="stat-value" id="survival-longest">0m</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Boost Ramps Used</h3>
+                                <div class="stat-value" id="survival-ramps">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="daily-section" class="profile-section">
+                <div class="section-header">
+                    <h2>Daily Tasks</h2>
+                    <span class="count" id="daily-tasks-count">0/0</span>
+                </div>
+                
+                <!-- Add blockchain check-in button -->
+                <div class="blockchain-checkin">
+                    <h3>Daily Blockchain Check-in</h3>
+                    <p>Check in daily to earn extra rewards!</p>
+                    <button id="daily-checkin-btn" class="action-btn">
+                        <i class="fas fa-calendar-check"></i> Daily Check-in
+                    </button>
+                    <div id="last-checkin-time"></div>
+                </div>
+                
+                <div class="daily-tasks-container" id="daily-tasks-container">
+                    <!-- Task template -->
+                    <template id="daily-task-template">
+                        <div class="daily-task">
+                            <div class="task-header">
+                                <span class="task-name"></span>
+                                <span class="task-reward"></span>
+                            </div>
+                            <div class="task-description"></div>
+                            <div class="task-progress-bar">
+                                <div class="progress"></div>
+                            </div>
+                            <div class="task-stats">
+                                <span class="task-progress"></span>
+                                <span class="task-status"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <div class="daily-tasks-info">
+                    <p>Complete daily tasks to earn DCoins and XP. Tasks reset at midnight.</p>
+                    <p>Special blockchain check-in task available daily!</p>
+                </div>
+            </section>
+
+            <section id="achievements-section" class="profile-section">
+                <div class="achievements-card">
+                    <h2>Achievements <span class="count-badge" id="achievements-count">0/20</span></h2>
+                    <div class="achievements-grid" id="achievements-container">
+                        <!-- Achievements will be loaded dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="badges-section" class="profile-section">
+                <div class="badges-card">
+                    <h2>Badges <span class="count-badge" id="badges-count">0/20</span></h2>
+                    <div class="badges-grid" id="badges-container">
+                        <!-- Badges will be loaded dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add DCoin Section -->
+            <section id="dcoin-section" class="profile-section">
+                <div class="dcoin-card">
+                    <h2>DCoin Balance <span class="count-badge" id="dcoin-total">0</span></h2>
+                    <div class="dcoin-stats-grid">
+                        <div class="stat-card">
+                            <h3>Current Balance</h3>
+                            <div class="stat-value" id="dcoin-current">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Earned</h3>
+                            <div class="stat-value" id="dcoin-earned">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Last Updated</h3>
+                            <div class="stat-value" id="dcoin-updated">Never</div>
+                        </div>
+                    </div>
+                    <div class="dcoin-transactions">
+                        <h3>Recent Transactions</h3>
+                        <div class="transactions-list" id="dcoin-history">
+                            <!-- Transactions will be loaded dynamically -->
+                        </div>
+                    </div>
+                    <div class="dcoin-actions">
+                        <button id="sync-dcoin" class="action-btn">
+                            <i class="fas fa-sync-alt"></i> Sync Balance
+                        </button>
+                        <button id="withdraw-dcoin" class="action-btn">
+                            <i class="fas fa-wallet"></i> Withdraw
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add NFT Section -->
+            <section id="nft-section" class="profile-section">
+                <div class="nft-card">
+                    <h2>Death Alley NFTs <span class="count-badge" id="nft-count">0/5</span></h2>
+                    <div class="nft-description">
+                        <p>Mint exclusive NFTs based on your level progression. Each tier represents your mastery of Death Alley.</p>
+                    </div>
+                    <div class="nft-grid">
+                        <div class="nft-item" data-tier="rookie">
+                            <div class="nft-preview">
+                                <img src="textures/nfts/rookie-warrior.png" alt="Rookie Warrior NFT">
+                                <div class="nft-status" id="rookie-status">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                            </div>
+                            <div class="nft-info">
+                                <h3>Rookie Warrior</h3>
+                                <p>Level 1-10</p>
+                                <div class="nft-requirements">
+                                    <span><i class="fas fa-star"></i> Required: Level 10</span>
+                                    <span><i class="fas fa-coins"></i> Cost: 20,000 DC</span>
+                                    <div class="level-progress-bar">
+                                        <div class="progress-fill" id="rookie-progress"></div>
+                                        <span class="progress-text" id="rookie-progress-text">Level 0/10</span>
+                                    </div>
+                                </div>
+                                <button class="mint-btn" id="mint-rookie" disabled>
+                                    <i class="fas fa-fire"></i> Mint NFT
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="nft-item" data-tier="veteran">
+                            <div class="nft-preview">
+                                <img src="textures/nfts/veteran-striker.png" alt="Veteran Striker NFT">
+                                <div class="nft-status" id="veteran-status">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                            </div>
+                            <div class="nft-info">
+                                <h3>Veteran Striker</h3>
+                                <p>Level 10-20</p>
+                                <div class="nft-requirements">
+                                    <span><i class="fas fa-star"></i> Required: Level 20</span>
+                                    <span><i class="fas fa-coins"></i> Cost: 40,000 DC</span>
+                                    <div class="level-progress-bar">
+                                        <div class="progress-fill" id="veteran-progress"></div>
+                                        <span class="progress-text" id="veteran-progress-text">Level 0/20</span>
+                                    </div>
+                                </div>
+                                <button class="mint-btn" id="mint-veteran" disabled>
+                                    <i class="fas fa-fire"></i> Mint NFT
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="nft-item" data-tier="elite">
+                            <div class="nft-preview">
+                                <img src="textures/nfts/elite-commander.png" alt="Elite Commander NFT">
+                                <div class="nft-status" id="elite-status">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                            </div>
+                            <div class="nft-info">
+                                <h3>Elite Commander</h3>
+                                <p>Level 20-30</p>
+                                <div class="nft-requirements">
+                                    <span><i class="fas fa-star"></i> Required: Level 30</span>
+                                    <span><i class="fas fa-coins"></i> Cost: 60,000 DC</span>
+                                    <div class="level-progress-bar">
+                                        <div class="progress-fill" id="elite-progress"></div>
+                                        <span class="progress-text" id="elite-progress-text">Level 0/30</span>
+                                    </div>
+                                </div>
+                                <button class="mint-btn" id="mint-elite" disabled>
+                                    <i class="fas fa-fire"></i> Mint NFT
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="nft-item" data-tier="master">
+                            <div class="nft-preview">
+                                <img src="textures/nfts/master-tactician.png" alt="Master Tactician NFT">
+                                <div class="nft-status" id="master-status">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                            </div>
+                            <div class="nft-info">
+                                <h3>Master Tactician</h3>
+                                <p>Level 30-40</p>
+                                <div class="nft-requirements">
+                                    <span><i class="fas fa-star"></i> Required: Level 40</span>
+                                    <span><i class="fas fa-coins"></i> Cost: 80,000 DC</span>
+                                    <div class="level-progress-bar">
+                                        <div class="progress-fill" id="master-progress"></div>
+                                        <span class="progress-text" id="master-progress-text">Level 0/40</span>
+                                    </div>
+                                </div>
+                                <button class="mint-btn" id="mint-master" disabled>
+                                    <i class="fas fa-fire"></i> Mint NFT
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="nft-item" data-tier="legendary">
+                            <div class="nft-preview">
+                                <img src="textures/nfts/legendary-champion.png" alt="Legendary Champion NFT">
+                                <div class="nft-status" id="legendary-status">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                            </div>
+                            <div class="nft-info">
+                                <h3>Legendary Champion</h3>
+                                <p>Level 40-50</p>
+                                <div class="nft-requirements">
+                                    <span><i class="fas fa-star"></i> Required: Level 50</span>
+                                    <span><i class="fas fa-coins"></i> Cost: 100,000 DC</span>
+                                    <div class="level-progress-bar">
+                                        <div class="progress-fill" id="legendary-progress"></div>
+                                        <span class="progress-text" id="legendary-progress-text">Level 0/50</span>
+                                    </div>
+                                </div>
+                                <button class="mint-btn" id="mint-legendary" disabled>
+                                    <i class="fas fa-fire"></i> Mint NFT
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nft-collection">
+                        <h3>Your NFT Collection</h3>
+                        <div class="collection-grid" id="nft-collection">
+                            <!-- Owned NFTs will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="settings-section">
+                <h2>Settings</h2>
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <h3>Sound</h3>
+                        <div class="setting-controls">
+                            <label>
+                                Sound Effects
+                                <input type="range" id="sfx-volume" min="0" max="100" value="100">
+                            </label>
+                            <label>
+                                Music
+                                <input type="range" id="music-volume" min="0" max="100" value="70">
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-card">
+                        <h3>Graphics</h3>
+                        <div class="setting-controls">
+                            <label>
+                                Quality
+                                <select id="graphics-quality">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </label>
+                            <label>
+                                <input type="checkbox" id="particles-enabled" checked>
+                                Enable Particles
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-card">
+                        <h3>Controls</h3>
+                        <div class="setting-controls">
+                            <label>
+                                Mouse Sensitivity
+                                <input type="range" id="mouse-sensitivity" min="1" max="10" value="5">
+                            </label>
+                            <label>
+                                <input type="checkbox" id="invert-y" checked>
+                                Invert Y-Axis
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-card">
+                        <h3>Profile</h3>
+                        <div class="setting-controls">
+                            <button id="reset-profile" class="danger-btn">
+                                <i class="fas fa-exclamation-triangle"></i> Reset Profile
+                            </button>
+                            <p class="warning-text">Warning: This will reset all progress, achievements, and stats!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Edit Profile</h2>
+            <form id="profile-form">
+                <div class="form-group">
+                    <label for="username">Display Name</label>
+                    <input type="text" id="username" name="username" maxlength="20" required>
+                </div>
+                <button type="submit" class="submit-btn">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Profile Switch Modal -->
+    <div id="profile-switch-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Profile Management</h2>
+            <p class="modal-message">Are you sure you want to sign out? This will clear the current profile from this browser.</p>
+            <div class="profile-actions">
+                <button id="confirm-sign-out" class="submit-btn">Sign Out</button>
+                <button id="cancel-sign-out" class="header-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this near the wallet connect button -->
+    <div class="network-container">
+        <label for="network-select" class="sr-only">Select Network</label> <!-- Added label for accessibility -->
+        <select id="network-select" class="network-selector" onchange="window.blockchainManager.switchChain(this.value)" disabled>
+            <option value="" disabled selected>Select Network</option> <!-- Added default disabled option -->
+            <option value="0x2105">Base</option>
+            <option value="0x14a34">Base Sepolia</option>
+            <option value="0xe705">Linea Sepolia</option>
+        </select>
+    </div>
+
+    <div class="notifications-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+    
+    <!-- Daily Tasks Template -->
+    <template id="daily-task-template">
+        <div class="daily-task">
+            <div class="task-header">
+                <span class="task-name"></span>
+                <span class="task-reward"></span>
+            </div>
+            <div class="task-description"></div>
+            <div class="task-progress-bar">
+                <div class="progress"></div>
+            </div>
+            <div class="task-footer">
+                <span class="task-progress"></span>
+                <span class="task-status"></span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Place this script block at the end of the body, before the closing </body> tag -->
+    <script>
+        // Global state initialization
+        window.userProfile = window.userProfile || {
+            xp: { level: 1 },
+            nfts: [],
+            achievements: [],
+            badges: []
+        };
+
+        // Utility Functions
+        function showNotification(message, type = 'info', duration = 3000) {
+            const container = document.querySelector('.notifications-container');
+            if (!container) return;
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('fade-out');
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 300);
+            }, duration);
+        }
+
+        function updateNFTProgressBars() {
+            const nftCards = document.querySelectorAll('.nft-card');
+            nftCards.forEach(card => {
+                const progressBar = card.querySelector('.progress-bar');
+                const progressText = card.querySelector('.progress-text');
+                if (!progressBar || !progressText) return;
+
+                const tier = card.getAttribute('data-tier');
+                if (!tier || !window.userProfile.nfts) return;
+
+                const nft = window.userProfile.nfts.find(n => n.tier === tier);
+                if (nft) {
+                    const progress = (nft.progress / nft.required) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = `${nft.progress}/${nft.required}`;
+                }
+            });
+        }
+
+        function updateXPDisplay(gained) {
+            const xpElement = document.getElementById('rank-progress-text');
+            const progressBar = document.getElementById('rank-progress-fill');
+            
+            if (xpElement && progressBar && window.userProfile.xp) {
+                const { currentXP, requiredXP, level } = window.userProfile.xp;
+                const percentage = (currentXP / requiredXP) * 100;
+                
+                xpElement.textContent = `${currentXP}/${requiredXP} XP to Level ${level + 1}`;
+                progressBar.style.width = `${percentage}%`;
+
+                if (gained) {
+                    showNotification(`+${gained} XP`, 'success');
+                }
+            }
+        }
+
+        function updateProfileDisplay() {
+            if (!window.userProfile) return;
+
+            // Update basic info
+            const displayName = document.getElementById('display-name');
+            if (displayName) displayName.textContent = window.userProfile.displayName || 'Player';
+
+            const userId = document.getElementById('user-id');
+            if (userId) userId.textContent = window.userProfile.userId || 'ABC-1234';
+
+            const joinDate = document.getElementById('join-date');
+            if (joinDate) joinDate.textContent = window.userProfile.joinDate || '01/01/2023';
+
+            // Update rank info
+            const rankName = document.getElementById('rank-name');
+            const rankIcon = document.getElementById('rank-icon');
+            if (rankName && rankIcon && window.userProfile.rank) {
+                rankName.textContent = window.userProfile.rank.name;
+                rankIcon.src = window.userProfile.rank.icon;
+            }
+
+            // Update DCoin balance
+            const dcoinBalance = document.getElementById('dcoin-balance');
+            if (dcoinBalance) dcoinBalance.textContent = window.userProfile.dcoins || 0;
+
+            // Update NFT progress bars
+            updateNFTProgressBars();
+
+            // Update XP display
+            updateXPDisplay();
+        }
+
+        function setupEventListeners() {
+            // Connect wallet button
+            const connectButtons = document.querySelectorAll('.wallet-connect-btn');
+            connectButtons.forEach(button => {
+                button.addEventListener('click', async () => {
+                    if (!window.blockchainManager.isConnected) {
+                        await window.blockchainManager.connectWallet();
+                    }
+                });
+            });
+
+            // Network selector
+            const networkSelectors = document.querySelectorAll('.network-selector');
+            networkSelectors.forEach(selector => {
+                selector.addEventListener('change', async (event) => {
+                    const selectedChainId = event.target.value;
+                    if (selectedChainId) {
+                        await window.blockchainManager.switchChain(selectedChainId);
+                    }
+                });
+            });
+
+            // Daily check-in button
+            const checkInButton = document.querySelector('#daily-check-in-btn');
+            if (checkInButton) {
+                checkInButton.addEventListener('click', async () => {
+                    try {
+                        await window.blockchainManager.performDailyCheckIn();
+                        updateDailyTasksDisplay();
+                    } catch (error) {
+                        console.error('Check-in failed:', error);
+                    }
+                });
+            }
+
+            // Achievement buttons
+            const achievementButtons = document.querySelectorAll('.mint-achievement-btn');
+            achievementButtons.forEach(button => {
+                button.addEventListener('click', async () => {
+                    const achievementId = button.getAttribute('data-achievement-id');
+                    if (achievementId) {
+                        try {
+                            await window.blockchainManager.mintAchievementBadge(parseInt(achievementId));
+                            updateAchievementsDisplay();
+                        } catch (error) {
+                            console.error('Achievement minting failed:', error);
+                        }
+                    }
+                });
+            });
+
+            // NFT minting buttons
+            const nftButtons = document.querySelectorAll('.mint-nft-btn');
+            nftButtons.forEach(button => {
+                button.addEventListener('click', async () => {
+                    const tier = button.getAttribute('data-tier');
+                    if (tier) {
+                        try {
+                            await window.blockchainManager.mintNFT(tier);
+                            updateNFTDisplay();
+                        } catch (error) {
+                            console.error('NFT minting failed:', error);
+                        }
+                    }
+                });
+            });
+
+            // Global event listeners
+            window.addEventListener('notification', (event) => {
+                const { message, type = 'info', duration = 3000 } = event.detail;
+                showNotification(message, type, duration);
+            });
+
+            window.addEventListener('xpUpdated', (event) => {
+                const { gained } = event.detail;
+                if (window.userProfile) {
+                    updateXPDisplay(gained);
+                }
+            });
+
+            // Profile management
+            const editProfileBtn = document.getElementById('edit-profile-btn');
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', () => {
+                    // Show edit profile modal or form
+                    const modal = document.getElementById('edit-profile-modal');
+                    if (modal) modal.style.display = 'block';
+                });
+            }
+
+            // Modal close buttons
+            document.querySelectorAll('.close-modal').forEach(closeBtn => {
+                closeBtn.addEventListener('click', () => {
+                    const modal = closeBtn.closest('.modal');
+                    if (modal) modal.style.display = 'none';
+                });
+            });
+
+            // DCoin actions
+            document.getElementById('sync-dcoin')?.addEventListener('click', async () => {
+                try {
+                    await window.userProfile.syncDCoinBalance();
+                    updateProfileDisplay();
+                } catch (error) {
+                    console.error('Failed to sync DCoin balance:', error);
+                }
+            });
+
+            document.getElementById('withdraw-dcoin')?.addEventListener('click', async () => {
+                try {
+                    const amount = prompt('Enter amount to withdraw:');
+                    if (amount && !isNaN(amount)) {
+                        await window.userProfile.withdrawDCoins(Number(amount));
+                        updateProfileDisplay();
+                    }
+                } catch (error) {
+                    console.error('Failed to withdraw DCoins:', error);
+                }
+            });
+        }
+
+        // Define setupTabSwitching
+        function setupTabSwitching() {
+            // Profile section tabs
+            document.querySelectorAll('.profile-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const sectionId = tab.dataset.section;
+                    
+                    // Update active tab
+                    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Update active section
+                    document.querySelectorAll('.profile-section').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    
+                    const targetSection = document.getElementById(`${sectionId}-section`);
+                    if (targetSection) {
+                        targetSection.style.display = 'block';
+                        
+                        // Trigger content-specific updates
+                        if (sectionId === 'achievements') {
+                            updateAchievementsDisplay();
+                        } else if (sectionId === 'nft') {
+                            updateNFTDisplay();
+                        } else if (sectionId === 'daily') {
+                            updateDailyTasksDisplay();
+                        }
+                    }
+                });
+            });
+
+            // Game mode tabs
+            document.querySelectorAll('.mode-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all mode tabs
+                    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    // Hide all mode stats sections
+                    document.querySelectorAll('.mode-stats').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    // Show selected mode stats section
+                    const mode = tab.dataset.mode;
+                    const statsSection = document.getElementById(`${mode}-stats`);
+                    if (statsSection) {
+                        statsSection.style.display = 'block';
+                    }
+                });
+            });
+
+            // Set first tabs as active by default
+            const firstProfileTab = document.querySelector('.profile-tab');
+            const firstModeTab = document.querySelector('.mode-tab');
+            if (firstProfileTab) firstProfileTab.click();
+            if (firstModeTab) firstModeTab.click();
+        }
+
+        // Initialize page
+        async function initializePage() {
+            // Initialize BlockchainManager globally
+            window.blockchainManager = new BlockchainManager();
+            await window.blockchainManager.init();
+            
+            // Setup event listeners and other initializations
+            setupEventListeners();
+            setupTabSwitching();
+            updateProfileDisplay();
+        }
+
+        // Call initializePage when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

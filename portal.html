@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ancient Portal - Travel to New Realms</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --portal-outer: #4e00c2;
+            --portal-mid: #8a00ff;
+            --portal-inner: #d400ff;
+            --portal-glow: #9324ff;
+            --bg-dark: #060125;
+            --text-light: #f0f0ff;
+            --text-accent: #c38bff;
+            --rune-color: rgba(210, 170, 255, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(40, 10, 60, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(60, 10, 120, 0.2) 0%, transparent 50%);
+            color: var(--text-light);
+            font-family: 'Spectral', serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Floating runes background */
+        .runes-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .rune {
+            position: absolute;
+            font-family: 'Cinzel', serif;
+            color: var(--rune-color);
+            font-weight: bold;
+            animation: float 15s linear infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-20vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .header {
+            margin-bottom: 40px;
+            text-align: center;
+            z-index: 1;
+            animation: glow 4s infinite alternate;
+        }
+
+        @keyframes glow {
+            0% {
+                text-shadow: 0 0 10px rgba(147, 36, 255, 0.5);
+            }
+            100% {
+                text-shadow: 0 0 20px rgba(212, 0, 255, 0.8), 0 0 30px rgba(147, 36, 255, 0.6);
+            }
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: var(--text-accent);
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Portal container and effects */
+        .portal-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .portal {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--portal-outer),
+                var(--portal-mid),
+                var(--portal-inner),
+                var(--portal-mid),
+                var(--portal-outer)
+            );
+            box-shadow: 
+                0 0 30px var(--portal-glow),
+                0 0 60px rgba(147, 36, 255, 0.4),
+                inset 0 0 60px rgba(212, 0, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: rotate 10s linear infinite, pulse 5s ease-in-out infinite alternate;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease-out;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 
+                    0 0 30px var(--portal-glow),
+                    0 0 60px rgba(147, 36, 255, 0.4),
+                    inset 0 0 60px rgba(212, 0, 255, 0.8);
+                width: 300px;
+                height: 300px;
+            }
+            100% {
+                box-shadow: 
+                    0 0 50px var(--portal-glow),
+                    0 0 100px rgba(147, 36, 255, 0.6),
+                    inset 0 0 80px rgba(212, 0, 255, 1);
+                width: 320px;
+                height: 320px;
+            }
+        }
+
+        .portal-core {
+            width: 60%;
+            height: 60%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(180, 120, 255, 0.8) 50%, transparent 70%);
+            position: relative;
+            animation: core-pulse 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes core-pulse {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        .portal-rays {
+            position: absolute;
+            width: 400%;
+            height: 400%;
+            background: 
+                repeating-conic-gradient(
+                    transparent 0deg,
+                    transparent 18deg,
+                    rgba(255, 255, 255, 0.3) 20deg,
+                    transparent 22deg,
+                    transparent 40deg
+                );
+            border-radius: 50%;
+            animation: spin 20s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Energy particles around portal */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .particle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: var(--portal-glow);
+            border-radius: 50%;
+            animation: particle-float 5s linear infinite;
+        }
+
+        @keyframes particle-float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-150px) translateX(150px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Destination cards */
+        .destinations {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 40px auto;
+            z-index: 2;
+        }
+
+        .destination-card {
+            width: 260px;
+            height: 320px;
+            background: rgba(30, 10, 40, 0.7);
+            border: 2px solid var(--portal-mid);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .destination-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(147, 36, 255, 0.5);
+            border-color: var(--portal-inner);
+        }
+
+        .destination-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(147, 36, 255, 0.1), transparent);
+            z-index: -1;
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .destination-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .destination-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--portal-glow);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--portal-glow);
+        }
+
+        .destination-icon i {
+            font-size: 40px;
+            color: white;
+        }
+
+        .destination-card h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--text-accent);
+        }
+
+        .destination-card p {
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .teleport-btn {
+            padding: 8px 16px;
+            background: linear-gradient(45deg, var(--portal-outer), var(--portal-mid));
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teleport-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .teleport-btn:hover {
+            background: linear-gradient(45deg, var(--portal-mid), var(--portal-inner));
+            box-shadow: 0 0 10px var(--portal-glow);
+        }
+
+        .teleport-btn:hover::after {
+            transform: translateX(100%);
+        }
+
+        /* Portal opening animation */
+        .portal-opening {
+            animation: portal-grow 3s forwards;
+        }
+
+        @keyframes portal-grow {
+            0% {
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                transform: scale(1.5) rotate(180deg);
+            }
+            100% {
+                transform: scale(5) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .fade-out {
+            animation: fade-out 3s forwards;
+        }
+
+        @keyframes fade-out {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(240, 240, 255, 0.7);
+            z-index: 1;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            h2 {
+                font-size: 1.2rem;
+            }
+            .portal-container {
+                width: 350px;
+                height: 350px;
+            }
+            .portal {
+                width: 250px;
+                height: 250px;
+            }
+            @keyframes pulse {
+                100% {
+                    width: 270px;
+                    height: 270px;
+                }
+            }
+            .destination-card {
+                width: 230px;
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .portal-container {
+                width: 300px;
+                height: 300px;
+            }
+            .portal {
+                width: 200px;
+                height: 200px;
+            }
+            @keyframes pulse {
+                100% {
+                    width: 220px;
+                    height: 220px;
+                }
+            }
+            .destinations {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="textures/logo.png">
+</head>
+<body>
+    <!-- Background runes -->
+    <div class="runes-bg" id="runes-container"></div>
+
+    <div class="header">
+        <h1>THE ANCIENT PORTAL</h1>
+        <h2>Pathways to Other Realms</h2>
+        <p class="subtitle">Step through the mystical gateway and travel to other worlds. Choose your destination wisely, traveler.</p>
+    </div>
+
+    <div class="portal-container">
+        <div class="portal" id="main-portal">
+            <div class="portal-rays"></div>
+            <div class="portal-core"></div>
+            <div class="particles" id="particles-container"></div>
+        </div>
+    </div>
+
+    <div class="destinations">
+        <div class="destination-card" data-destination="death-alley">
+            <div class="destination-icon">
+                <i class="fas fa-car-crash"></i>
+            </div>
+            <h3>Death Alley</h3>
+            <p>Return to the high-speed combat racing game where danger lurks around every corner.</p>
+            <button class="teleport-btn">Enter the Alley</button>
+        </div>
+        
+        <div class="destination-card" data-destination="crypto-raiders">
+            <div class="destination-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Crypto Raiders</h3>
+            <p>Join the ultimate fantasy RPG adventure where blockchain heroes battle for glory and treasures.</p>
+            <button class="teleport-btn">Begin Quest</button>
+        </div>
+        
+        <div class="destination-card" data-destination="cosmic-voyage">
+            <div class="destination-icon">
+                <i class="fas fa-rocket"></i>
+            </div>
+            <h3>Cosmic Voyage</h3>
+            <p>Explore the vastness of space in this interstellar adventure across unexplored galaxies.</p>
+            <button class="teleport-btn">Launch Ship</button>
+        </div>
+        
+        <div class="destination-card" data-destination="mystic-realms">
+            <div class="destination-icon">
+                <i class="fas fa-hat-wizard"></i>
+            </div>
+            <h3>Mystic Realms</h3>
+            <p>Master the arcane arts in a world where magic flows through every living being.</p>
+            <button class="teleport-btn">Cast Spell</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2023 The Ancient Portal | A gateway between worlds</p>
+    </footer>
+
+    <script>
+        // Create floating runes in the background
+        const runesContainer = document.getElementById('runes-container');
+        const runeSymbols = ['᛫', 'ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᚺ', 'ᚾ', 'ᛁ', 'ᛃ', 'ᛇ', 'ᛈ', 'ᛉ', 'ᛊ', 'ᛏ', 'ᛒ', 'ᛖ', 'ᛗ', 'ᛚ', 'ᛜ', 'ᛟ', 'ᛞ'];
+        
+        for (let i = 0; i < 50; i++) {
+            const rune = document.createElement('div');
+            rune.className = 'rune';
+            rune.textContent = runeSymbols[Math.floor(Math.random() * runeSymbols.length)];
+            rune.style.left = `${Math.random() * 100}%`;
+            rune.style.fontSize = `${Math.random() * 20 + 20}px`;
+            rune.style.animationDuration = `${Math.random() * 20 + 10}s`;
+            rune.style.animationDelay = `${Math.random() * 10}s`;
+            runesContainer.appendChild(rune);
+        }
+
+        // Create energy particles around the portal
+        const particlesContainer = document.getElementById('particles-container');
+        
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 100 + Math.random() * 50;
+            const x = Math.cos(angle) * distance;
+            const y = Math.sin(angle) * distance;
+            
+            particle.style.left = `calc(50% + ${x}px)`;
+            particle.style.top = `calc(50% + ${y}px)`;
+            particle.style.animationDuration = `${3 + Math.random() * 4}s`;
+            particle.style.animationDelay = `${Math.random() * 5}s`;
+            particlesContainer.appendChild(particle);
+        }
+
+        // Portal teleportation effect
+        const destinationCards = document.querySelectorAll('.destination-card');
+        const portal = document.getElementById('main-portal');
+        const body = document.body;
+        
+        destinationCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const destination = this.getAttribute('data-destination');
+                
+                // Begin teleportation animation
+                portal.classList.add('portal-opening');
+                document.querySelector('.header').classList.add('fade-out');
+                document.querySelector('.destinations').classList.add('fade-out');
+                document.querySelector('footer').classList.add('fade-out');
+                
+                // After animation completes, redirect to destination
+                setTimeout(() => {
+                    let destinationUrl;
+                    
+                    switch(destination) {
+                        case 'death-alley':
+                            destinationUrl = 'user.html';
+                            break;
+                        case 'crypto-raiders':
+                            destinationUrl = 'https://cryptoraiders.xyz';
+                            break;
+                        case 'cosmic-voyage':
+                            destinationUrl = 'https://cosmic-voyage-game.com';
+                            break;
+                        case 'mystic-realms':
+                            destinationUrl = 'https://mystic-realms-adventure.com';
+                            break;
+                        default:
+                            destinationUrl = 'index.html';
+                    }
+                    
+                    window.location.href = destinationUrl;
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Dealth Alley </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="tankUpgrade.css">
+    <link rel="icon" type="image/png" href="textures/logo.png">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* Canvas styling to ensure it takes up the full screen */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* Make sure context menu doesn't interfere with camera panning */
+        canvas::-webkit-context-menu {
+            display: none !important;
+        }
+        
+        /* Hide the info text initially - it's now in the main menu */
+        #info { position: absolute; top: 10px; width: 100%; text-align: center; color: white; font-size: 18px; pointer-events: none; z-index: 100; display: none; }
+        
+        /* Checkpoint-specific styles */
+        #checkpoint-info {
+            border-top: 1px solid #00ffff;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+        
+        .message.checkpoint {
+            background-color: rgba(0, 255, 255, 0.8);
+            color: #003333;
+            border: 2px solid #00ffff;
+            font-weight: bold;
+            animation: pulse-checkpoint 0.5s infinite alternate;
+        }
+        
+        .message.checkpoint-missed {
+            background-color: rgba(255, 60, 0, 0.8);
+            color: white;
+            border: 2px solid #ff3c00;
+            font-weight: bold;
+        }
+        
+        @keyframes pulse-checkpoint {
+            0% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.8); }
+            100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
+        }
+        
+        /* Modal styles for checkpoint info */
+        #checkpoint-info-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 480px;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            z-index: 2000;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        
+        /* Style for the controls help - hidden initially */
+        #controls-help {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.6);
+            color: #00ffff;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 1000;
+            text-align: center;
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+        }
+        
+        #controls-help p {
+            margin: 5px 0;
+        }
+        
+        /* Progress Notifications */
+        .notifications-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 300px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .notification {
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            color: white;
+            font-family: 'Chakra Petch', sans-serif;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            border-left: 4px solid #4CAF50;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .notification.info {
+            border-left-color: #2196F3;
+        }
+        
+        .notification.achievement {
+            border-left-color: #FFD700;
+        }
+        
+        .notification.badge {
+            border-left-color: #9C27B0;
+        }
+        
+        .notification.task {
+            border-left-color: #FF9800;
+        }
+        
+        .notification.nft {
+            border-left-color: #E91E63;
+        }
+        
+        .notification-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .notification-title.achievement {
+            color: #FFD700;
+        }
+        
+        .notification-title.badge {
+            color: #9C27B0;
+        }
+        
+        .notification-title.task {
+            color: #FF9800;
+        }
+        
+        .notification-title.nft {
+            color: #E91E63;
+        }
+
+        #gameOver {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        #gameOver .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 20, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #ff3c00;
+            box-shadow: 0 0 20px rgba(255, 60, 0, 0.3);
+            text-align: center;
+            color: white;
+            max-width: 500px;
+            width: 90%;
+            margin: 0;
+        }
+
+        #gameOver h1 {
+            color: #ff3c00;
+            font-size: 36px;
+            margin: 0 0 20px 0;
+            text-shadow: 0 0 10px rgba(255, 60, 0, 0.5);
+        }
+
+        #finalScore {
+            font-size: 24px;
+            color: #ffcc00;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+
+        .game-over-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .game-btn {
+            background: linear-gradient(to bottom, #333, #222);
+            color: white;
+            border: 1px solid #444;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .game-btn:hover {
+            background: linear-gradient(to bottom, #444, #333);
+            border-color: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-btn.primary {
+            background: linear-gradient(to bottom, #ff3c00, #cc3000);
+            border-color: #ff3c00;
+        }
+
+        .game-btn.primary:hover {
+            background: linear-gradient(to bottom, #ff4d1a, #ff3c00);
+        }
+
+        .session-stats {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .session-stats div {
+            margin: 5px 0;
+        }
+
+        .session-stats span {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        #survival-stats {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 60, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        .highest-wave, .total-enemies-defeated {
+            font-size: 18px;
+            margin: 5px 0;
+            color: #ff9966;
+        }
+
+        .survival-tip {
+            font-size: 14px;
+            color: #888;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        @media (max-width: 480px) {
+            .game-over-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            #gameOver .modal-content {
+                padding: 20px;
+            }
+            
+            #gameOver h1 {
+                font-size: 28px;
+            }
+        }
+
+        /* Game Logo styling */
+        #game-logo {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            width: 200px;
+            height: auto;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #game-logo.visible {
+            opacity: 1;
+        }
+
+        #game-logo.menu-hidden {
+            opacity: 0;
+        }
+
+        /* Loading spinner styles */
+        .fa-spin {
+            animation: fa-spin 2s infinite linear;
+        }
+        @keyframes fa-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Wallet connect button styles */
+        .wallet-connect-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            min-width: 150px; /* Ensure consistent width */
+        }
+
+        .wallet-connect-btn:hover:not([disabled]) {
+            background: linear-gradient(135deg, #45a049, #4CAF50);
+            transform: translateY(-1px);
+        }
+
+        .wallet-connect-btn.connected {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            cursor: default;
+            opacity: 0.9;
+        }
+
+        .wallet-connect-btn.wrong-network {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            cursor: pointer;
+            opacity: 1;
+        }
+
+        .wallet-connect-btn.wrong-network:hover {
+            background: linear-gradient(135deg, #F57C00, #FF9800);
+            transform: translateY(-1px);
+        }
+
+        .wallet-connect-btn.connected:hover {
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- Add logo container -->
+        <img id="game-logo" src="textures/logo.png" alt="Death Alley Logo">
+        <!-- Info text removed as it's now handled by the main menu -->
+        <div id="info" style="display: none;">Dealth Alley</div>
+        
+        <!-- Controls help completely removed as it's now handled by the main menu -->
+        <div id="controls-help" style="display: none;"></div>
+        
+        <!-- Mobile Controls (hidden initially, will be shown when game starts on mobile) -->
+        <div id="mobile-controls" style="display: none;">
+            <div id="dpad-container">
+                <div id="dpad">
+                    <button id="dpad-up" class="dpad-btn">↑</button>
+                    <button id="dpad-left" class="dpad-btn">←</button>
+                    <button id="dpad-right" class="dpad-btn">→</button>
+                    <button id="dpad-down" class="dpad-btn">↓</button>
+                </div>
+            </div>
+            <div id="action-buttons">
+                <button id="shoot-btn">SHOOT</button>
+                <div id="game-controls">
+                    <button id="pause-btn">⏸️</button>
+                    <button id="play-btn">▶️</button>
+                    <button id="hud-toggle-btn">HUD</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modern HUD Structure (hidden initially, will be shown when game starts) -->
+        <div id="hud" style="display: none;">
+            <div id="stats-container">
+                <div id="level">Level: 1</div>
+                <div id="stats">Score: 0 | Health: 100</div>
+            </div>
+            
+            <!-- Time Trial Timer Display -->
+            <div id="time-trial-container" style="display: none;">
+                <div id="time-trial-label">TIME</div>
+                <div id="time-trial-timer">00:00.000</div>
+            </div>
+            
+            <div id="health-bar-container">
+                <div id="health-bar-label">HEALTH</div>
+                <div id="health-bar">
+                    <div id="health-bar-fill"></div>
+                </div>
+            </div>
+            
+            <div id="speedometer-container">
+                <div id="speedometer-label">SPEED</div>
+                <div id="speedometer">
+                    <div id="speed-value">0 KPH</div>
+                    <div id="speed-bar">
+                        <div id="speed-bar-fill"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="power-up-indicator">
+                No active power-ups
+            </div>
+        </div>
+        
+        <!-- Game Over Modal -->
+        <div id="gameOver" style="display: none;">
+            <div class="modal-content">
+            <h1>GAME OVER</h1>
+            <div id="finalScore">Score: 0</div>
+                
+                <!-- Survival mode specific stats -->
+            <div id="survival-stats" style="display: none;">
+                <div class="highest-wave">Highest Wave: <span id="highest-wave">0</span></div>
+                <div class="total-enemies-defeated">Enemies Defeated: <span id="total-enemies-defeated">0</span></div>
+                <div class="survival-tip">Tip: Each wave gets progressively harder. Bosses appear every 3 waves!</div>
+            </div>
+                
+                <!-- Navigation buttons -->
+                <div class="game-over-buttons">
+                    <button id="restartBtn" class="game-btn primary">Try Again</button>
+                    <button id="returnToMenuBtn" class="game-btn">Main Menu</button>
+                    <button id="changeGameModeBtn" class="game-btn">Change Mode</button>
+                    <button id="viewProfileBtn" class="game-btn">View Profile</button>
+                </div>
+                
+                <!-- Session stats -->
+                <div class="session-stats">
+                    <div>Time Played: <span id="sessionTime">0:00</span></div>
+                    <div>Enemies Defeated: <span id="sessionEnemies">0</span></div>
+                    <div>DCoins Earned: <span id="sessionDCoins">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tank Upgrade UI -->
+        <div id="tank-upgrade-container" class="tank-upgrade-container" style="display: none;">
+            <div class="component-section">
+                <h3>Tank Components</h3>
+                <div id="components-list"></div>
+            </div>
+            <div class="upgrade-section">
+                <h3>Tank Level: <span id="tank-level">1</span></h3>
+                <p>Next upgrade cost: <span id="upgrade-cost">2500</span> DCoins</p>
+                <button id="perform-upgrade" class="game-btn">Upgrade Tank</button>
+            </div>
+        </div>
+        <button id="tank-upgrade-btn" class="tank-upgrade-btn">Tank Upgrade</button>
+    </div>
+    
+    <div class="notifications-container" id="notifications-container">
+        <!-- Notifications will be added here dynamically -->
+    </div>
+</body>
+</html>
